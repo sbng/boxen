@@ -178,13 +178,26 @@ func (b *Boxen) PackageStart(username, password, hostname, config string) error 
 		// so, we can set the hostname/username/password if desired.
 		platforms.WithPrepareConsole(true),
 	)
+	
+	ignoreStartupErrors := util.GetEnvIntOrDefault("BOXEN_IGNORE_STARTUP_ERRORS", 0)
+	
 	if err != nil {
-		return err
+		if ignoreStartupErrors > 0 {
+			b.Logger.Criticalf("startup error ignored (BOXEN_IGNORE_STARTUP_ERRORS set): %s", err)
+		} else {
+			return err
+		}
 	}
 
-	err = b.packageStartConfig(name, username, password, hostname, config)
-	if err != nil {
-		return err
+	if err == nil {
+		err = b.packageStartConfig(name, username, password, hostname, config)
+		if err != nil {
+			if ignoreStartupErrors > 0 {
+				b.Logger.Criticalf("startup config error ignored (BOXEN_IGNORE_STARTUP_ERRORS set): %s", err)
+			} else {
+				return err
+			}
+		}
 	}
 
 	err = b.Instances[name].Detach()
