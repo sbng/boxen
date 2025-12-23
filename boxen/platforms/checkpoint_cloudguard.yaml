@@ -1,0 +1,28 @@
+---
+default:
+  driver-type: "network"
+  privilege-levels:
+    configuration:
+      name: "configuration"
+      pattern: '(?im)^[\w.\-@/:]{1,63}>\s*$'
+      previous-priv: ""
+      deescalate: ""
+      escalate: ""
+      escalate-auth: false
+      escalate-prompt:
+  default-desired-privilege-level: "configuration"
+  failed-when-contains:
+    - "CLINFR"
+    - "NMSETH"
+    - "Upgrade is still running. Log in to the Status and Actions page to see the progress"
+    - "Unable to get user permissions"
+    - "You can't start interactive session from another interactive session"
+    - "command not found"
+  textfsm-platform: "" # ignored in go because no ntc-templates
+  network-on-open:
+    - operation: "acquire-priv" # targets default desired priv by default
+  network-on-close:
+    - operation: "acquire-priv"
+    - operation: "channel.write"
+      input: "exit"
+    - operation: "channel.return"

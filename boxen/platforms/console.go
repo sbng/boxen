@@ -66,11 +66,25 @@ func NewScrapliConsole(
 
 	var p *platform.Platform
 
-	p, err = platform.NewPlatform(
-		scrapliPlatform,
-		"localhost",
-		opts...,
-	)
+	// Handle embedded files
+	if strings.HasPrefix(scrapliPlatform, "embedded://") {
+		fileName := strings.TrimPrefix(scrapliPlatform, "embedded://")
+		fileContent, err := embeddedFiles.ReadFile(fileName)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read embedded file %s: %w", fileName, err)
+		}
+		p, err = platform.NewPlatform(
+			fileContent,
+			"localhost",
+			opts...,
+		)
+	} else {
+		p, err = platform.NewPlatform(
+			scrapliPlatform,
+			"localhost",
+			opts...,
+		)
+	}
 	if err != nil {
 		return nil, err
 	}
